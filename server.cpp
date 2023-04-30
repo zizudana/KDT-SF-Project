@@ -5,6 +5,7 @@
 #include <iostream>
 #include <thread>
 #include <vector>
+#include <mysql/jdbc.h>
 
 #define MAX_SIZE 1024
 #define MAX_CLIENT 3
@@ -13,6 +14,10 @@ using std::cout;
 using std::cin;
 using std::endl;
 using std::string;
+
+const string server = "tcp://127.0.0.1:3306"; // 데이터베이스 주소
+const string username = "root"; // 데이터베이스 사용자
+const string password = "1234"; // 데이터베이스 접속 비밀번호
 
 struct SOCKET_INFO { // 연결된 소켓 정보에 대한 틀 생성
     SOCKET sck;
@@ -28,6 +33,7 @@ void add_client(); // 소켓에 연결을 시도하는 client를 추가(accept)�
 void send_msg(const char* msg); // send() 함수 실행됨. 자세한 내용은 함수 구현부에서 확인.
 void recv_msg(int idx); // recv() 함수 실행됨. 자세한 내용은 함수 구현부에서 확인.
 void del_client(int idx); // 소켓에 연결되어 있는 client를 제거하는 함수. closesocket() 실행됨. 자세한 내용은 함수 구현부에서 확인.
+void show_before_msg(int idx); // 새로 입장한 클라이언트에게 이전 채팅기록을 보여준다
 
 int main() {
     WSADATA wsa;
@@ -105,6 +111,7 @@ void add_client() {
 
     std::thread th(recv_msg, client_count); // 다른 사람들로부터 오는 메시지를 계속해서 받을 수 있는 상태로 만들어 두기.
 
+    //show_before_msg(client_count);
     client_count++; // client 수 증가.
     cout << "[공지] 현재 접속자 수 : " << client_count << "명" << endl;
     send_msg(msg.c_str()); // c_str : string 타입을 const chqr* 타입으로 바꿔줌.
@@ -118,7 +125,68 @@ void send_msg(const char* msg) {
     }
 }
 
+void show_before_msg(int idx) {
+    // MySQL Connector/C++ 초기화
+    sql::mysql::MySQL_Driver* driver; // 추후 해제하지 않아도 Connector/C++가 자동으로 해제해 줌
+    sql::Connection* con;
+    sql::Statement* stmt;
+    sql::PreparedStatement* pstmt;
+    sql::ResultSet* result;
+
+    try {
+        driver = sql::mysql::get_mysql_driver_instance();
+        con = driver->connect(server, username, password);
+    }
+    catch (sql::SQLException& e) {
+        cout << "Could not connect to server. Error message: " << e.what() << endl;
+        exit(1);
+    }
+
+    // 데이터베이스 선택
+    con->setSchema("chattingproject");
+
+    // db 한글 저장을 위한 셋팅 
+    stmt = con->createStatement();
+    stmt->execute("set names euckr");
+    if (stmt) { delete stmt; stmt = nullptr; }
+
+    string msg = "";
+    //select  
+    pstmt = con->prepareStatement("SELECT sender, receiver, message FROM chatting;");
+    result = pstmt->executeQuery();
+
+    while (result->next()) {
+        msg += result->getString(1) + " : " + result->getString(3) + "\n";
+    }
+    send(sck_list[idx].sck, msg.c_str(), MAX_SIZE, 0);
+}
+
 void recv_msg(int idx) {
+
+    // MySQL Connector/C++ 초기화
+    sql::mysql::MySQL_Driver* driver; // 추후 해제하지 않아도 Connector/C++가 자동으로 해제해 줌
+    sql::Connection* con;
+    sql::Statement* stmt;
+    sql::PreparedStatement* pstmt;
+    //sql::ResultSet* result;
+
+    try {
+        driver = sql::mysql::get_mysql_driver_instance();
+        con = driver->connect(server, username, password);
+    }
+    catch (sql::SQLException& e) {
+        cout << "Could not connect to server. Error message: " << e.what() << endl;
+        exit(1);
+    }
+
+    // 데이터베이스 선택
+    con->setSchema("chattingproject");
+
+    // db 한글 저장을 위한 셋팅 
+    stmt = con->createStatement();
+    stmt->execute("set names euckr");
+    if (stmt) { delete stmt; stmt = nullptr; }
+
     char buf[MAX_SIZE] = { };
     string msg = "";
 
@@ -126,6 +194,10 @@ void recv_msg(int idx) {
         ZeroMemory(&buf, MAX_SIZE);
         if (recv(sck_list[idx].sck, buf, MAX_SIZE, 0) > 0) { // 오류가 발생하지 않으면 recv는 수신된 바이트 수를 반환. 0보다 크다는 것은 메시지가 왔다는 것.
             msg = sck_list[idx].user + " : " + buf;
+            pstmt = con->prepareStatement("INSERT INTO chatting(sender, message) VALUES(?,?)"); // INSERT
+            pstmt->setString(1, sck_list[idx].user);
+            pstmt->setString(2, buf);
+            pstmt->execute(); // 쿼리 실행
             cout << msg << endl;
             send_msg(msg.c_str());
         }
