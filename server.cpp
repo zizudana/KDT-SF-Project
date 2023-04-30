@@ -1,4 +1,4 @@
-#pragma comment(lib, "ws2_32.lib")  //¸í½ÃÀûÀÎ ¶óÀÌºê·¯¸®ÀÇ ¸µÅ©. À©¼Ó ¶óÀÌºê·¯¸® ÂüÁ¶
+ï»¿#pragma comment(lib, "ws2_32.lib")  //ëª…ì‹œì ì¸ ë¼ì´ë¸ŒëŸ¬ë¦¬ì˜ ë§í¬. ìœˆì† ë¼ì´ë¸ŒëŸ¬ë¦¬ ì°¸ì¡°
 
 #include <WinSock2.h>
 #include <string>
@@ -14,38 +14,38 @@ using std::cin;
 using std::endl;
 using std::string;
 
-struct SOCKET_INFO { // ¿¬°áµÈ ¼ÒÄÏ Á¤º¸¿¡ ´ëÇÑ Æ² »ı¼º
+struct SOCKET_INFO { // ì—°ê²°ëœ ì†Œì¼“ ì •ë³´ì— ëŒ€í•œ í‹€ ìƒì„±
     SOCKET sck;
     string user;
 };
 
-std::vector<SOCKET_INFO> sck_list; // ¿¬°áµÈ Å¬¶óÀÌ¾ğÆ® ¼ÒÄÏµéÀ» ÀúÀåÇÒ ¹è¿­ ¼±¾ğ.
-SOCKET_INFO server_sock; // ¼­¹ö ¼ÒÄÏ¿¡ ´ëÇÑ Á¤º¸¸¦ ÀúÀåÇÒ º¯¼ö ¼±¾ğ.
-int client_count = 0; // ÇöÀç Á¢¼ÓÇØ ÀÖ´Â Å¬¶óÀÌ¾ğÆ®¸¦ count ÇÒ º¯¼ö ¼±¾ğ.
+std::vector<SOCKET_INFO> sck_list; // ì—°ê²°ëœ í´ë¼ì´ì–¸íŠ¸ ì†Œì¼“ë“¤ì„ ì €ì¥í•  ë°°ì—´ ì„ ì–¸.
+SOCKET_INFO server_sock; // ì„œë²„ ì†Œì¼“ì— ëŒ€í•œ ì •ë³´ë¥¼ ì €ì¥í•  ë³€ìˆ˜ ì„ ì–¸.
+int client_count = 0; // í˜„ì¬ ì ‘ì†í•´ ìˆëŠ” í´ë¼ì´ì–¸íŠ¸ë¥¼ count í•  ë³€ìˆ˜ ì„ ì–¸.
 
-void server_init(); // socket ÃÊ±âÈ­ ÇÔ¼ö. socket(), bind(), listen() ÇÔ¼ö ½ÇÇàµÊ. ÀÚ¼¼ÇÑ ³»¿ëÀº ÇÔ¼ö ±¸ÇöºÎ¿¡¼­ È®ÀÎ.
-void add_client(); // ¼ÒÄÏ¿¡ ¿¬°áÀ» ½ÃµµÇÏ´Â client¸¦ Ãß°¡(accept)ÇÏ´Â ÇÔ¼ö. client accept() ÇÔ¼ö ½ÇÇàµÊ. ÀÚ¼¼ÇÑ ³»¿ëÀº ÇÔ¼ö ±¸ÇöºÎ¿¡¼­ È®ÀÎ.
-void send_msg(const char* msg); // send() ÇÔ¼ö ½ÇÇàµÊ. ÀÚ¼¼ÇÑ ³»¿ëÀº ÇÔ¼ö ±¸ÇöºÎ¿¡¼­ È®ÀÎ.
-void recv_msg(int idx); // recv() ÇÔ¼ö ½ÇÇàµÊ. ÀÚ¼¼ÇÑ ³»¿ëÀº ÇÔ¼ö ±¸ÇöºÎ¿¡¼­ È®ÀÎ.
-void del_client(int idx); // ¼ÒÄÏ¿¡ ¿¬°áµÇ¾î ÀÖ´Â client¸¦ Á¦°ÅÇÏ´Â ÇÔ¼ö. closesocket() ½ÇÇàµÊ. ÀÚ¼¼ÇÑ ³»¿ëÀº ÇÔ¼ö ±¸ÇöºÎ¿¡¼­ È®ÀÎ.
+void server_init(); // socket ì´ˆê¸°í™” í•¨ìˆ˜. socket(), bind(), listen() í•¨ìˆ˜ ì‹¤í–‰ë¨. ìì„¸í•œ ë‚´ìš©ì€ í•¨ìˆ˜ êµ¬í˜„ë¶€ì—ì„œ í™•ì¸.
+void add_client(); // ì†Œì¼“ì— ì—°ê²°ì„ ì‹œë„í•˜ëŠ” clientë¥¼ ì¶”ê°€(accept)í•˜ëŠ” í•¨ìˆ˜. client accept() í•¨ìˆ˜ ì‹¤í–‰ë¨. ìì„¸í•œ ë‚´ìš©ì€ í•¨ìˆ˜ êµ¬í˜„ë¶€ì—ì„œ í™•ì¸.
+void send_msg(const char* msg); // send() í•¨ìˆ˜ ì‹¤í–‰ë¨. ìì„¸í•œ ë‚´ìš©ì€ í•¨ìˆ˜ êµ¬í˜„ë¶€ì—ì„œ í™•ì¸.
+void recv_msg(int idx); // recv() í•¨ìˆ˜ ì‹¤í–‰ë¨. ìì„¸í•œ ë‚´ìš©ì€ í•¨ìˆ˜ êµ¬í˜„ë¶€ì—ì„œ í™•ì¸.
+void del_client(int idx); // ì†Œì¼“ì— ì—°ê²°ë˜ì–´ ìˆëŠ” clientë¥¼ ì œê±°í•˜ëŠ” í•¨ìˆ˜. closesocket() ì‹¤í–‰ë¨. ìì„¸í•œ ë‚´ìš©ì€ í•¨ìˆ˜ êµ¬í˜„ë¶€ì—ì„œ í™•ì¸.
 
 int main() {
     WSADATA wsa;
 
-    // Winsock¸¦ ÃÊ±âÈ­ÇÏ´Â ÇÔ¼ö. MAKEWORD(2, 2)´Â WinsockÀÇ 2.2 ¹öÀüÀ» »ç¿ëÇÏ°Ú´Ù´Â ÀÇ¹Ì.
-    // ½ÇÇà¿¡ ¼º°øÇÏ¸é 0À», ½ÇÆĞÇÏ¸é ±× ÀÌ¿ÜÀÇ °ªÀ» ¹İÈ¯.
-    // 0À» ¹İÈ¯Çß´Ù´Â °ÍÀº WinsockÀ» »ç¿ëÇÒ ÁØºñ°¡ µÇ¾ú´Ù´Â ÀÇ¹Ì.
+    // Winsockë¥¼ ì´ˆê¸°í™”í•˜ëŠ” í•¨ìˆ˜. MAKEWORD(2, 2)ëŠ” Winsockì˜ 2.2 ë²„ì „ì„ ì‚¬ìš©í•˜ê² ë‹¤ëŠ” ì˜ë¯¸.
+    // ì‹¤í–‰ì— ì„±ê³µí•˜ë©´ 0ì„, ì‹¤íŒ¨í•˜ë©´ ê·¸ ì´ì™¸ì˜ ê°’ì„ ë°˜í™˜.
+    // 0ì„ ë°˜í™˜í–ˆë‹¤ëŠ” ê²ƒì€ Winsockì„ ì‚¬ìš©í•  ì¤€ë¹„ê°€ ë˜ì—ˆë‹¤ëŠ” ì˜ë¯¸.
     int code = WSAStartup(MAKEWORD(2, 2), &wsa);
 
     if (!code) {
         server_init();
 
         std::thread th1[MAX_CLIENT];
-        for (int i = 0; i < MAX_CLIENT; i++) { // ÀÎ¿ø ¼ö ¸¸Å­ thread »ı¼ºÇØ¼­ °¢°¢ÀÇ Å¬¶óÀÌ¾ğÆ®°¡ µ¿½Ã¿¡ ¼ÒÅëÇÒ ¼ö ÀÖµµ·Ï ÇÔ.
+        for (int i = 0; i < MAX_CLIENT; i++) { // ì¸ì› ìˆ˜ ë§Œí¼ thread ìƒì„±í•´ì„œ ê°ê°ì˜ í´ë¼ì´ì–¸íŠ¸ê°€ ë™ì‹œì— ì†Œí†µí•  ìˆ˜ ìˆë„ë¡ í•¨.
             th1[i] = std::thread(add_client);
         }
 
-        while (1) { // ¹«ÇÑ ¹İº¹¹®À» »ç¿ëÇÏ¿© ¼­¹ö°¡ °è¼ÓÇØ¼­ Ã¤ÆÃ º¸³¾ ¼ö ÀÖ´Â »óÅÂ¸¦ ¸¸µé¾î ÁÜ. ¹İº¹¹®À» »ç¿ëÇÏÁö ¾ÊÀ¸¸é ÇÑ ¹ø¸¸ º¸³¾ ¼ö ÀÖÀ½.
+        while (1) { // ë¬´í•œ ë°˜ë³µë¬¸ì„ ì‚¬ìš©í•˜ì—¬ ì„œë²„ê°€ ê³„ì†í•´ì„œ ì±„íŒ… ë³´ë‚¼ ìˆ˜ ìˆëŠ” ìƒíƒœë¥¼ ë§Œë“¤ì–´ ì¤Œ. ë°˜ë³µë¬¸ì„ ì‚¬ìš©í•˜ì§€ ì•Šìœ¼ë©´ í•œ ë²ˆë§Œ ë³´ë‚¼ ìˆ˜ ìˆìŒ.
             string text, msg = "";
 
             std::getline(cin, text);
@@ -56,13 +56,13 @@ int main() {
 
         for (int i = 0; i < MAX_CLIENT; i++) {
             th1[i].join();
-            //thread ÀÛ¾÷ÀÌ ³¡³¯ ¶§±îÁö main ÇÔ¼ö°¡ ³¡³ªÁö ¾Êµµ·Ï ÇØÁÜ.
+            //thread ì‘ì—…ì´ ëë‚  ë•Œê¹Œì§€ main í•¨ìˆ˜ê°€ ëë‚˜ì§€ ì•Šë„ë¡ í•´ì¤Œ.
         }
 
         closesocket(server_sock.sck);
     }
     else {
-        cout << "ÇÁ·Î±×·¥ Á¾·á. (Error code : " << code << ")";
+        cout << "í”„ë¡œê·¸ë¨ ì¢…ë£Œ. (Error code : " << code << ")";
     }
 
     WSACleanup();
@@ -73,13 +73,13 @@ int main() {
 void server_init() {
     server_sock.sck = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
 
-    SOCKADDR_IN server_addr = {}; // ¼ÒÄÏ ÁÖ¼Ò ¼³Á¤ º¯¼ö
-    server_addr.sin_family = AF_INET; // ¼ÒÄÏÀº Internet Å¸ÀÔ 
-    server_addr.sin_port = htons(7777); // ¼­¹ö Æ÷Æ® ¼³Á¤
-    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);  // AnyÀÎ °æ¿ì´Â È£½ºÆ®¸¦ 127.0.0.1·Î Àâ¾Æµµ µÇ°í localhost·Î Àâ¾Æµµ µÇ°í ¾çÂÊ ´Ù Çã¿ëÇÏ°Ô ÇÒ ¼ö ÀÖ´Ù. ±×°ÍÀÌ INADDR_ANYÀÌ´Ù.
+    SOCKADDR_IN server_addr = {}; // ì†Œì¼“ ì£¼ì†Œ ì„¤ì • ë³€ìˆ˜
+    server_addr.sin_family = AF_INET; // ì†Œì¼“ì€ Internet íƒ€ì… 
+    server_addr.sin_port = htons(7777); // ì„œë²„ í¬íŠ¸ ì„¤ì •
+    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);  // Anyì¸ ê²½ìš°ëŠ” í˜¸ìŠ¤íŠ¸ë¥¼ 127.0.0.1ë¡œ ì¡ì•„ë„ ë˜ê³  localhostë¡œ ì¡ì•„ë„ ë˜ê³  ì–‘ìª½ ë‹¤ í—ˆìš©í•˜ê²Œ í•  ìˆ˜ ìˆë‹¤. ê·¸ê²ƒì´ INADDR_ANYì´ë‹¤.
 
-    bind(server_sock.sck, (sockaddr*)&server_addr, sizeof(server_addr)); // ¼³Á¤µÈ ¼ÒÄÏ Á¤º¸¸¦ ¼ÒÄÏ¿¡ ¹ÙÀÎµùÇÑ´Ù.
-    listen(server_sock.sck, SOMAXCONN); // ¼ÒÄÏÀ» ´ë±â »óÅÂ·Î ±â´Ù¸°´Ù.
+    bind(server_sock.sck, (sockaddr*)&server_addr, sizeof(server_addr)); // ì„¤ì •ëœ ì†Œì¼“ ì •ë³´ë¥¼ ì†Œì¼“ì— ë°”ì¸ë”©í•œë‹¤.
+    listen(server_sock.sck, SOMAXCONN); // ì†Œì¼“ì„ ëŒ€ê¸° ìƒíƒœë¡œ ê¸°ë‹¤ë¦°ë‹¤.
 
     server_sock.user = "server";
 
@@ -91,29 +91,29 @@ void add_client() {
     int addrsize = sizeof(addr);
     char buf[MAX_SIZE] = { };
 
-    ZeroMemory(&addr, addrsize); // addrÀÇ ¸Ş¸ğ¸® ¿µ¿ªÀ» 0À¸·Î ÃÊ±âÈ­
+    ZeroMemory(&addr, addrsize); // addrì˜ ë©”ëª¨ë¦¬ ì˜ì—­ì„ 0ìœ¼ë¡œ ì´ˆê¸°í™”
 
     SOCKET_INFO new_client = {};
 
     new_client.sck = accept(server_sock.sck, (sockaddr*)&addr, &addrsize);
-    recv(new_client.sck, buf, MAX_SIZE, 0); // Winsock2ÀÇ recv ÇÔ¼ö. client°¡ º¸³½ ´Ğ³×ÀÓÀ» ¹ŞÀ½.
+    recv(new_client.sck, buf, MAX_SIZE, 0); // Winsock2ì˜ recv í•¨ìˆ˜. clientê°€ ë³´ë‚¸ ë‹‰ë„¤ì„ì„ ë°›ìŒ.
     new_client.user = string(buf);
 
-    string msg = "[°øÁö] " + new_client.user + " ´ÔÀÌ ÀÔÀåÇß½À´Ï´Ù.";
+    string msg = "[ê³µì§€] " + new_client.user + " ë‹˜ì´ ì…ì¥í–ˆìŠµë‹ˆë‹¤.";
     cout << msg << endl;
-    sck_list.push_back(new_client); // client Á¤º¸¸¦ ´ã´Â sck_list ¹è¿­¿¡ »õ·Î¿î client Ãß°¡
+    sck_list.push_back(new_client); // client ì •ë³´ë¥¼ ë‹´ëŠ” sck_list ë°°ì—´ì— ìƒˆë¡œìš´ client ì¶”ê°€
 
-    std::thread th(recv_msg, client_count); // ´Ù¸¥ »ç¶÷µé·ÎºÎÅÍ ¿À´Â ¸Ş½ÃÁö¸¦ °è¼ÓÇØ¼­ ¹ŞÀ» ¼ö ÀÖ´Â »óÅÂ·Î ¸¸µé¾î µÎ±â.
+    std::thread th(recv_msg, client_count); // ë‹¤ë¥¸ ì‚¬ëŒë“¤ë¡œë¶€í„° ì˜¤ëŠ” ë©”ì‹œì§€ë¥¼ ê³„ì†í•´ì„œ ë°›ì„ ìˆ˜ ìˆëŠ” ìƒíƒœë¡œ ë§Œë“¤ì–´ ë‘ê¸°.
 
-    client_count++; // client ¼ö Áõ°¡.
-    cout << "[°øÁö] ÇöÀç Á¢¼ÓÀÚ ¼ö : " << client_count << "¸í" << endl;
-    send_msg(msg.c_str()); // c_str : string Å¸ÀÔÀ» const chqr* Å¸ÀÔÀ¸·Î ¹Ù²ãÁÜ.
+    client_count++; // client ìˆ˜ ì¦ê°€.
+    cout << "[ê³µì§€] í˜„ì¬ ì ‘ì†ì ìˆ˜ : " << client_count << "ëª…" << endl;
+    send_msg(msg.c_str()); // c_str : string íƒ€ì…ì„ const chqr* íƒ€ì…ìœ¼ë¡œ ë°”ê¿”ì¤Œ.
 
     th.join();
 }
 
 void send_msg(const char* msg) {
-    for (int i = 0; i < client_count; i++) { // Á¢¼ÓÇØ ÀÖ´Â ¸ğµç client¿¡°Ô ¸Ş½ÃÁö Àü¼Û
+    for (int i = 0; i < client_count; i++) { // ì ‘ì†í•´ ìˆëŠ” ëª¨ë“  clientì—ê²Œ ë©”ì‹œì§€ ì „ì†¡
         send(sck_list[i].sck, msg, MAX_SIZE, 0);
     }
 }
@@ -124,16 +124,16 @@ void recv_msg(int idx) {
 
     while (1) {
         ZeroMemory(&buf, MAX_SIZE);
-        if (recv(sck_list[idx].sck, buf, MAX_SIZE, 0) > 0) { // ¿À·ù°¡ ¹ß»ıÇÏÁö ¾ÊÀ¸¸é recv´Â ¼ö½ÅµÈ ¹ÙÀÌÆ® ¼ö¸¦ ¹İÈ¯. 0º¸´Ù Å©´Ù´Â °ÍÀº ¸Ş½ÃÁö°¡ ¿Ô´Ù´Â °Í.
+        if (recv(sck_list[idx].sck, buf, MAX_SIZE, 0) > 0) { // ì˜¤ë¥˜ê°€ ë°œìƒí•˜ì§€ ì•Šìœ¼ë©´ recvëŠ” ìˆ˜ì‹ ëœ ë°”ì´íŠ¸ ìˆ˜ë¥¼ ë°˜í™˜. 0ë³´ë‹¤ í¬ë‹¤ëŠ” ê²ƒì€ ë©”ì‹œì§€ê°€ ì™”ë‹¤ëŠ” ê²ƒ.
             msg = sck_list[idx].user + " : " + buf;
             cout << msg << endl;
             send_msg(msg.c_str());
         }
-        else { //±×·¸Áö ¾ÊÀ» °æ¿ì ÅğÀå¿¡ ´ëÇÑ ½ÅÈ£·Î »ı°¢ÇÏ¿© ÅğÀå ¸Ş½ÃÁö Àü¼Û
-            msg = "[°øÁö] " + sck_list[idx].user + " ´ÔÀÌ ÅğÀåÇß½À´Ï´Ù.";
+        else { //ê·¸ë ‡ì§€ ì•Šì„ ê²½ìš° í‡´ì¥ì— ëŒ€í•œ ì‹ í˜¸ë¡œ ìƒê°í•˜ì—¬ í‡´ì¥ ë©”ì‹œì§€ ì „ì†¡
+            msg = "[ê³µì§€] " + sck_list[idx].user + " ë‹˜ì´ í‡´ì¥í–ˆìŠµë‹ˆë‹¤.";
             cout << msg << endl;
             send_msg(msg.c_str());
-            del_client(idx); // Å¬¶óÀÌ¾ğÆ® »èÁ¦
+            del_client(idx); // í´ë¼ì´ì–¸íŠ¸ ì‚­ì œ
             return;
         }
     }
