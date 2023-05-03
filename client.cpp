@@ -17,7 +17,7 @@ using std::string;
 
 const string server = "tcp://127.0.0.1:3306"; // 데이터베이스 주소
 const string username = "root"; // 데이터베이스 사용자
-const string password = "1234"; // 데이터베이스 접속 비밀번호
+const string password = "cho337910!@@"; // 데이터베이스 접속 비밀번호
 
 SOCKET client_sock;
 //string my_nick;
@@ -25,6 +25,7 @@ int user_input;
 string user_name;
 string user_pw;
 string new_pw;
+char delete_count;
 
 int chat_recv() {
     char buf[MAX_SIZE] = { };
@@ -82,10 +83,11 @@ int main() {
     if (!code) {
         bool is_login = false;
         while (!is_login) {
-            cout << "-----------------------------------------" << endl;
-            cout << "*            CHATTING PROGRAM           *" << endl;
-            cout << "* 1: 로그인 2: 회원가입 3: 비밀번호변경 *" << endl;
-            cout << "-----------------------------------------" << endl;
+            cout << "----------------------------" << endl;
+            cout << "*      CHATTING PROGRAM    *" << endl;
+            cout << "* 1: 로그인    2: 회원가입 *" << endl;
+            cout << "* 3: 암호변경  4: 회원탈퇴 *" << endl;
+            cout << "----------------------------" << endl;
             cin >> user_input;
             if (user_input == 1) { // 로그인하기
                 cout << "name : ";
@@ -164,9 +166,40 @@ int main() {
                     }
                 }
             }
-            else {
-                cout << "1 또는 2를 입력해주세요" << endl;
+            else if (user_input == 4) { // 회원탈퇴
+                cout << "ID를 입력하세요 : ";
+                cin >> user_name;
+                cout << "password를 입력하세요 : ";
+                cin >> user_pw;
+                //select  
+                pstmt = con->prepareStatement("SELECT * FROM user;");
+                result = pstmt->executeQuery();
+                while (result->next()) {
+                    if (user_name == result->getString(1) && user_pw == result->getString(2)) {
+                        is_login = true;
+                        break;
+                    }
+                }
+                if (is_login) {
+                    cout << "정말 탈퇴하시겠습니까? (Y / N)";
+                    cin >> delete_count;
+                    if (delete_count == 'Y' || delete_count == 'y') {
+                        pstmt = con->prepareStatement("DELETE FROM user WHERE name = ?");
+                        pstmt->setString(1, user_name);
+                        result = pstmt->executeQuery();
+                        printf("정상적으로 탈퇴되셨습니다.\n");
+                        is_login = false;
+                    }
+                    else if (delete_count == 'N' || delete_count == 'n') {
+                        is_login = false;
+                        
+                    }
+                }
+                else {
+                    cout << "정보가 올바르지 못합니다." << endl;
+                }
             }
+
         }
 
         //cout << "사용할 닉네임 입력 >> ";
@@ -212,6 +245,7 @@ int main() {
         th2.join();
         closesocket(client_sock);
     }
+   
 
     WSACleanup();
     return 0;
