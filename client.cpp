@@ -17,7 +17,7 @@ using std::string;
 
 const string server = "tcp://127.0.0.1:3306"; // 데이터베이스 주소
 const string username = "root"; // 데이터베이스 사용자
-const string password = "cho337910!@@"; // 데이터베이스 접속 비밀번호
+const string password = "1234"; // 데이터베이스 접속 비밀번호
 
 SOCKET client_sock;
 //string my_nick;
@@ -82,10 +82,10 @@ int main() {
     if (!code) {
         bool is_login = false;
         while (!is_login) {
-            cout << "--------------------------------" << endl;
-            cout << "*       CHATTING PROGRAM       *" << endl;
-            cout << "* 1: 로그인하기 2: 회원가입하기*" << endl;
-            cout << "--------------------------------" << endl;
+            cout << "-----------------------------------------" << endl;
+            cout << "*            CHATTING PROGRAM           *" << endl;
+            cout << "* 1: 로그인 2: 회원가입 3: 비밀번호변경 *" << endl;
+            cout << "-----------------------------------------" << endl;
             cin >> user_input;
             if (user_input == 1) { // 로그인하기
                 cout << "name : ";
@@ -95,7 +95,7 @@ int main() {
                 //select  
                 pstmt = con->prepareStatement("SELECT * FROM user;");
                 result = pstmt->executeQuery();
-
+            
                 while (result->next()) {
                     if (user_name == result->getString(1) && user_pw == result->getString(2)) {
                         is_login = true;
@@ -108,7 +108,7 @@ int main() {
                 else {
                     cout << "로그인 실패" << endl;
                 }
-
+                
             }
             else if (user_input == 2) { // 회원가입하기
                 bool id_ok = false;
@@ -141,7 +141,7 @@ int main() {
             }
             else if (user_input == 3) { //암호 변경
                 bool id_ok = false;
-                while (id_ok==false) {
+                while (id_ok == false) {
                     cout << "ID를 입력하세요(10자 이내) : ";
                     cin >> user_name;
                     pstmt = con->prepareStatement("SELECT * FROM user;");
@@ -157,19 +157,12 @@ int main() {
                             printf("암호가 정상적으로 변경되었습니다.\n");
                             id_ok = true;
                             break;
-                        }                       
-                    }                 
+                        }
+                    }
                     if (id_ok == false) {
                         cout << "올바른 ID가 아닙니다.(20자이내) : " << endl;
                     }
-                                                                                                                                                                                
                 }
-               
-                
-            
-                
-
-                
             }
             else {
                 cout << "1 또는 2를 입력해주세요" << endl;
@@ -179,7 +172,7 @@ int main() {
         //cout << "사용할 닉네임 입력 >> ";
         //cin >> my_nick;
 
-        client_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+        client_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP); 
 
         SOCKADDR_IN client_addr = {};
         client_addr.sin_family = AF_INET;
@@ -200,9 +193,11 @@ int main() {
         pstmt = con->prepareStatement("SELECT sender, receiver, message FROM chatting;");
         result = pstmt->executeQuery();
 
-
         while (result->next()) {
-            msg += result->getString(1) + " : " + result->getString(3) + "\n";
+            string receiver = result->getString(2);
+            if (receiver.empty() || receiver.compare(user_name) == 0) {
+                msg += result->getString(1) + " : " + result->getString(3) + "\n";
+            }
         }
         cout << msg;
 
