@@ -1,6 +1,6 @@
-#pragma comment(lib, "ws2_32.lib")
+ï»¿#pragma comment(lib, "ws2_32.lib")
 
-#include <WinSock2.h> //Winsock Çì´õÆÄÀÏ include. WSADATA µé¾îÀÖÀ½.¤¤
+#include <WinSock2.h> //Winsock í—¤ë”íŒŒì¼ include. WSADATA ë“¤ì–´ìˆìŒ.ã„´
 #include <WS2tcpip.h>
 #include <string>
 #include <sstream>
@@ -15,15 +15,16 @@ using std::cin;
 using std::endl;
 using std::string;
 
-const string server = "tcp://127.0.0.1:3306"; // µ¥ÀÌÅÍº£ÀÌ½º ÁÖ¼Ò
-const string username = "root"; // µ¥ÀÌÅÍº£ÀÌ½º »ç¿ëÀÚ
-const string password = "1234"; // µ¥ÀÌÅÍº£ÀÌ½º Á¢¼Ó ºñ¹Ğ¹øÈ£
+const string server = "tcp://127.0.0.1:3306"; // ë°ì´í„°ë² ì´ìŠ¤ ì£¼ì†Œ
+const string username = "root"; // ë°ì´í„°ë² ì´ìŠ¤ ì‚¬ìš©ì
+const string password = "cho337910!@@"; // ë°ì´í„°ë² ì´ìŠ¤ ì ‘ì† ë¹„ë°€ë²ˆí˜¸
 
 SOCKET client_sock;
 //string my_nick;
 int user_input;
 string user_name;
 string user_pw;
+string new_pw;
 
 int chat_recv() {
     char buf[MAX_SIZE] = { };
@@ -33,10 +34,10 @@ int chat_recv() {
         ZeroMemory(&buf, MAX_SIZE);
         if (recv(client_sock, buf, MAX_SIZE, 0) > 0) {
             msg = buf;
-            std::stringstream ss(msg);  // ¹®ÀÚ¿­À» ½ºÆ®¸²È­
+            std::stringstream ss(msg);  // ë¬¸ìì—´ì„ ìŠ¤íŠ¸ë¦¼í™”
             string user;
-            ss >> user; // ½ºÆ®¸²À» ÅëÇØ, ¹®ÀÚ¿­À» °ø¹é ºĞ¸®ÇØ º¯¼ö¿¡ ÇÒ´ç
-            if (user != user_name) cout << buf << endl; // ³»°¡ º¸³½ °Ô ¾Æ´Ò °æ¿ì¿¡¸¸ Ãâ·ÂÇÏµµ·Ï.
+            ss >> user; // ìŠ¤íŠ¸ë¦¼ì„ í†µí•´, ë¬¸ìì—´ì„ ê³µë°± ë¶„ë¦¬í•´ ë³€ìˆ˜ì— í• ë‹¹
+            if (user != user_name) cout << buf << endl; // ë‚´ê°€ ë³´ë‚¸ ê²Œ ì•„ë‹ ê²½ìš°ì—ë§Œ ì¶œë ¥í•˜ë„ë¡.
         }
         else {
             cout << "Server Off" << endl;
@@ -47,8 +48,8 @@ int chat_recv() {
 
 int main() {
 
-    // MySQL Connector/C++ ÃÊ±âÈ­
-    sql::mysql::MySQL_Driver* driver; // ÃßÈÄ ÇØÁ¦ÇÏÁö ¾Ê¾Æµµ Connector/C++°¡ ÀÚµ¿À¸·Î ÇØÁ¦ÇØ ÁÜ
+    // MySQL Connector/C++ ì´ˆê¸°í™”
+    sql::mysql::MySQL_Driver* driver; // ì¶”í›„ í•´ì œí•˜ì§€ ì•Šì•„ë„ Connector/C++ê°€ ìë™ìœ¼ë¡œ í•´ì œí•´ ì¤Œ
     sql::Connection* con;
     sql::Statement* stmt;
     sql::PreparedStatement* pstmt;
@@ -63,27 +64,30 @@ int main() {
         exit(1);
     }
 
-    // µ¥ÀÌÅÍº£ÀÌ½º ¼±ÅÃ
+    // ë°ì´í„°ë² ì´ìŠ¤ ì„ íƒ
     con->setSchema("chattingproject");
 
-    // db ÇÑ±Û ÀúÀåÀ» À§ÇÑ ¼ÂÆÃ 
+    // db í•œê¸€ ì €ì¥ì„ ìœ„í•œ ì…‹íŒ… 
     stmt = con->createStatement();
     stmt->execute("set names euckr");
     if (stmt) { delete stmt; stmt = nullptr; }
 
     WSADATA wsa;
 
-    // Winsock¸¦ ÃÊ±âÈ­ÇÏ´Â ÇÔ¼ö. MAKEWORD(2, 2)´Â WinsockÀÇ 2.2 ¹öÀüÀ» »ç¿ëÇÏ°Ú´Ù´Â ÀÇ¹Ì.
-    // ½ÇÇà¿¡ ¼º°øÇÏ¸é 0À», ½ÇÆĞÇÏ¸é ±× ÀÌ¿ÜÀÇ °ªÀ» ¹İÈ¯.
-    // 0À» ¹İÈ¯Çß´Ù´Â °ÍÀº WinsockÀ» »ç¿ëÇÒ ÁØºñ°¡ µÇ¾ú´Ù´Â ÀÇ¹Ì.
+    // Winsockë¥¼ ì´ˆê¸°í™”í•˜ëŠ” í•¨ìˆ˜. MAKEWORD(2, 2)ëŠ” Winsockì˜ 2.2 ë²„ì „ì„ ì‚¬ìš©í•˜ê² ë‹¤ëŠ” ì˜ë¯¸.
+    // ì‹¤í–‰ì— ì„±ê³µí•˜ë©´ 0ì„, ì‹¤íŒ¨í•˜ë©´ ê·¸ ì´ì™¸ì˜ ê°’ì„ ë°˜í™˜.
+    // 0ì„ ë°˜í™˜í–ˆë‹¤ëŠ” ê²ƒì€ Winsockì„ ì‚¬ìš©í•  ì¤€ë¹„ê°€ ë˜ì—ˆë‹¤ëŠ” ì˜ë¯¸.
     int code = WSAStartup(MAKEWORD(2, 2), &wsa);
 
     if (!code) {
         bool is_login = false;
         while (!is_login) {
-            cout << "1: ·Î±×ÀÎÇÏ±â 2: È¸¿ø°¡ÀÔÇÏ±â" << endl;
+            cout << "--------------------------------" << endl;
+            cout << "*       CHATTING PROGRAM       *" << endl;
+            cout << "* 1: ë¡œê·¸ì¸í•˜ê¸° 2: íšŒì›ê°€ì…í•˜ê¸°*" << endl;
+            cout << "--------------------------------" << endl;
             cin >> user_input;
-            if (user_input == 1) { // ·Î±×ÀÎÇÏ±â
+            if (user_input == 1) { // ë¡œê·¸ì¸í•˜ê¸°
                 cout << "name : ";
                 cin >> user_name;
                 cout << "password : ";
@@ -91,7 +95,7 @@ int main() {
                 //select  
                 pstmt = con->prepareStatement("SELECT * FROM user;");
                 result = pstmt->executeQuery();
-            
+
                 while (result->next()) {
                     if (user_name == result->getString(1) && user_pw == result->getString(2)) {
                         is_login = true;
@@ -99,25 +103,25 @@ int main() {
                     }
                 }
                 if (is_login) {
-                    cout << "·Î±×ÀÎ ¼º°ø! Ã¤ÆÃ¹æ¿¡ ÀÔÀåÇÕ´Ï´Ù" << endl;
+                    cout << "ë¡œê·¸ì¸ ì„±ê³µ! ì±„íŒ…ë°©ì— ì…ì¥í•©ë‹ˆë‹¤" << endl;
                 }
                 else {
-                    cout << "·Î±×ÀÎ ½ÇÆĞ" << endl;
+                    cout << "ë¡œê·¸ì¸ ì‹¤íŒ¨" << endl;
                 }
-                
+
             }
-            else if (user_input == 2) { // È¸¿ø°¡ÀÔÇÏ±â
+            else if (user_input == 2) { // íšŒì›ê°€ì…í•˜ê¸°
                 bool id_ok = false;
                 while (id_ok == false) {
                     cout << "===============================" << endl;
-                    cout << "ID¸¦ ÀÔ·ÂÇÏ¼¼¿ä(10ÀÚ ÀÌ³») : ";
+                    cout << "IDë¥¼ ì…ë ¥í•˜ì„¸ìš”(10ì ì´ë‚´) : ";
                     cin >> user_name;
                     pstmt = con->prepareStatement("SELECT * FROM user;");
                     result = pstmt->executeQuery();
                     bool is_join = false;
                     while (result->next()) {
                         if (user_name == result->getString(1).c_str()) {
-                            cout << "ÀÌ¹Ì Á¸ÀçÇÏ´Â IDÀÔ´Ï´Ù." << endl;
+                            cout << "ì´ë¯¸ ì¡´ì¬í•˜ëŠ” IDì…ë‹ˆë‹¤." << endl;
                             is_join = true;
                             break;
                         }
@@ -125,25 +129,57 @@ int main() {
                     if (is_join == false)
                         id_ok = true;
                 }
-                cout << "password¸¦ ÀÔ·ÂÇÏ¼¼¿ä(20ÀÚ ÀÌ³») : ";
+                cout << "passwordë¥¼ ì…ë ¥í•˜ì„¸ìš”(20ì ì´ë‚´) : ";
                 cin >> user_pw;
                 pstmt = con->prepareStatement("INSERT INTO user(name, pw) VALUES(?,?)"); // INSERT
 
-                pstmt->setString(1, user_name); // Ã¹ ¹øÂ° ÄÃ·³¿¡ id »ğÀÔ
-                pstmt->setString(2, user_pw); // µÎ ¹øÂ° ÄÃ·³¿¡ pwd »ğÀÔ
-                pstmt->execute(); // Äõ¸® ½ÇÇà
-                cout << user_name << "´Ô, ID°¡ Á¤»óÀûÀ¸·Î »ı¼ºµÇ¼Ì½À´Ï´Ù." << endl;
+                pstmt->setString(1, user_name); // ì²« ë²ˆì§¸ ì»¬ëŸ¼ì— id ì‚½ì…
+                pstmt->setString(2, user_pw); // ë‘ ë²ˆì§¸ ì»¬ëŸ¼ì— pwd ì‚½ì…
+                pstmt->execute(); // ì¿¼ë¦¬ ì‹¤í–‰
+                cout << user_name << "ë‹˜, IDê°€ ì •ìƒì ìœ¼ë¡œ ìƒì„±ë˜ì…¨ìŠµë‹ˆë‹¤." << endl;
                 cout << "===============================" << endl << endl;
             }
+            else if (user_input == 3) { //ì•”í˜¸ ë³€ê²½
+                bool id_ok = false;
+                while (id_ok==false) {
+                    cout << "IDë¥¼ ì…ë ¥í•˜ì„¸ìš”(10ì ì´ë‚´) : ";
+                    cin >> user_name;
+                    pstmt = con->prepareStatement("SELECT * FROM user;");
+                    result = pstmt->executeQuery();
+                    while (result->next()) {
+                        if (user_name == result->getString(1).c_str()) {
+                            cout << "ë³€ê²½í•  ì•”í˜¸ë¥¼ ì…ë ¥í•˜ì„¸ìš”(20ì ì´ë‚´) : ";
+                            cin >> new_pw;
+                            pstmt = con->prepareStatement("UPDATE user SET pw = ? WHERE name = ?");
+                            pstmt->setString(1, new_pw);
+                            pstmt->setString(2, user_name);
+                            pstmt->executeQuery();
+                            printf("ì•”í˜¸ê°€ ì •ìƒì ìœ¼ë¡œ ë³€ê²½ë˜ì—ˆìŠµë‹ˆë‹¤.\n");
+                            id_ok = true;
+                            break;
+                        }                       
+                    }                 
+                    if (id_ok == false) {
+                        cout << "ì˜¬ë°”ë¥¸ IDê°€ ì•„ë‹™ë‹ˆë‹¤.(20ìì´ë‚´) : " << endl;
+                    }
+                                                                                                                                                                                
+                }
+               
+                
+            
+                
+
+                
+            }
             else {
-                cout << "1 ¶Ç´Â 2¸¦ ÀÔ·ÂÇØÁÖ¼¼¿ä" << endl;
+                cout << "1 ë˜ëŠ” 2ë¥¼ ì…ë ¥í•´ì£¼ì„¸ìš”" << endl;
             }
         }
 
-        //cout << "»ç¿ëÇÒ ´Ğ³×ÀÓ ÀÔ·Â >> ";
+        //cout << "ì‚¬ìš©í•  ë‹‰ë„¤ì„ ì…ë ¥ >> ";
         //cin >> my_nick;
 
-        client_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP); 
+        client_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
 
         SOCKADDR_IN client_addr = {};
         client_addr.sin_family = AF_INET;
@@ -164,6 +200,7 @@ int main() {
         pstmt = con->prepareStatement("SELECT sender, receiver, message FROM chatting;");
         result = pstmt->executeQuery();
 
+
         while (result->next()) {
             msg += result->getString(1) + " : " + result->getString(3) + "\n";
         }
@@ -174,7 +211,7 @@ int main() {
         while (1) {
             string text;
             std::getline(cin, text);
-            const char* buffer = text.c_str(); // stringÇüÀ» char* Å¸ÀÔÀ¸·Î º¯È¯
+            const char* buffer = text.c_str(); // stringí˜•ì„ char* íƒ€ì…ìœ¼ë¡œ ë³€í™˜
             send(client_sock, buffer, strlen(buffer), 0);
         }
         th2.join();
