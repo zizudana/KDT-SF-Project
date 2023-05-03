@@ -18,7 +18,7 @@ using std::string;
 
 const string server = "tcp://127.0.0.1:3306"; // 데이터베이스 주소
 const string username = "root"; // 데이터베이스 사용자
-const string password = "1234"; // 데이터베이스 접속 비밀번호
+const string password = "cho337910!@@"; // 데이터베이스 접속 비밀번호
 
 struct SOCKET_INFO { // 연결된 소켓 정보에 대한 틀 생성
     SOCKET sck;
