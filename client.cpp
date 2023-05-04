@@ -1,4 +1,4 @@
-﻿#pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "ws2_32.lib")
 
 #include <WinSock2.h> //Winsock 헤더파일 include. WSADATA 들어있음.ㄴ
 #include <WS2tcpip.h>
@@ -92,7 +92,6 @@ int main() {
         while (!is_login) {
             cout << "----------------------------" << endl;
             cout << "*      CHATTING PROGRAM    *" << endl;
-            cout << "*                          *" << endl;
             cout << "* 1: 로그인    2: 회원가입 *" << endl;
             cout << "* 3: 암호변경  4: 회원탈퇴 *" << endl;
             cout << "----------------------------" << endl;
@@ -200,13 +199,15 @@ int main() {
                     }
                     else if (delete_count == 'N' || delete_count == 'n') {
                         is_login = false;
-
+                        
                     }
                 }
                 else {
                     cout << "정보가 올바르지 못합니다." << endl;
                 }
             }
+
+        }
 
         }
         //cout << "사용할 닉네임 입력 >> ";
@@ -253,6 +254,7 @@ int main() {
         th2.join();
         closesocket(client_sock);
     }
+   
 
 
     WSACleanup();
