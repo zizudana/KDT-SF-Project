@@ -9,7 +9,7 @@
 #include <mysql/jdbc.h>
 
 #define MAX_SIZE 1024
-#define MAX_CLIENT 5
+#define MAX_CLIENT 10
 
 using std::cout;
 using std::cin;
@@ -18,7 +18,7 @@ using std::string;
 
 const string server = "tcp://127.0.0.1:3306"; // 데이터베이스 주소
 const string username = "root"; // 데이터베이스 사용자
-const string password = "cho337910!@@"; // 데이터베이스 접속 비밀번호
+const string password = "1234"; // 데이터베이스 접속 비밀번호
 
 struct SOCKET_INFO { // 연결된 소켓 정보에 대한 틀 생성
     SOCKET sck;
@@ -34,6 +34,8 @@ void add_client(); // 소켓에 연결을 시도하는 client를 추가(accept)�
 void send_msg(const char* msg); // send() 함수 실행됨. 자세한 내용은 함수 구현부에서 확인.
 void recv_msg(int idx); // recv() 함수 실행됨. 자세한 내용은 함수 구현부에서 확인.
 void del_client(int idx); // 소켓에 연결되어 있는 client를 제거하는 함수. closesocket() 실행됨. 자세한 내용은 함수 구현부에서 확인.
+void show_user(int idx);
+void calculator(int idx, int position, string sbuf);
 
 int main() {
     WSADATA wsa;
@@ -126,6 +128,54 @@ void send_msg(const char* msg) {
     }
 }
 
+void show_user(int idx) {
+    string msg = "현재 접속중인 사람 : ";
+    for (int i = 0; i < client_count; i++) {
+        msg += sck_list[i].user;
+        msg += " ";
+    }
+    send(sck_list[idx].sck, msg.c_str(), MAX_SIZE, 0);
+    cout << msg;
+}
+
+void show_func(int idx) {
+    string msg = 
+    "-----------------------------------------\n" 
+    "* # :FUNC LIST                          *\n" 
+    "* #USER :현재 접속중인 사용자 아이디    *\n"
+    "* #DM receiver message :DM 보내기       *\n" 
+    "* #CAL number operator number :사칙연산 *\n" 
+    "-----------------------------------------\n";
+    send(sck_list[idx].sck, msg.c_str(), MAX_SIZE, 0);
+}
+
+void calculator(int idx, int position, string sbuf) {
+// #CAL 3.3 * 4
+    int cur_position = position + 1;
+    position = sbuf.find(" ", cur_position);
+    int len = position - cur_position;
+    string num1 = sbuf.substr(cur_position, len);
+    cur_position = position + 1;
+    position = sbuf.find(" ", cur_position);
+    string op = sbuf.substr(cur_position, 1);
+    cur_position = position + 1;
+    string num2 = sbuf.substr(cur_position);
+    
+    double result;
+    if (op == "+")
+        result = std::stoi(num1) + std::stoi(num2);
+    else if (op == "-")
+        result = std::stoi(num1) - std::stoi(num2);
+    else if (op == "*")
+        result = std::stoi(num1) * std::stoi(num2);
+    else if (op == "/")
+        result = (double)std::stoi(num1) / std::stoi(num2);
+    string res = std::to_string(result);
+    string msg = "[RESULT] " + num1 + " " + op + " " + num2 + " = " + res;
+    cout << msg << endl;
+    send(sck_list[idx].sck, msg.c_str(), MAX_SIZE, 0);
+
+}
 
 void recv_msg(int idx) {
 
@@ -159,8 +209,13 @@ void recv_msg(int idx) {
     while (1) {
         ZeroMemory(&buf, MAX_SIZE);
         if (recv(sck_list[idx].sck, buf, MAX_SIZE, 0) > 0) { // 오류가 발생하지 않으면 recv는 수신된 바이트 수를 반환. 0보다 크다는 것은 메시지가 왔다는 것.
-            if (buf[0] == '#') {
-                string sbuf(buf);
+            string sbuf(buf);
+            if (sbuf.compare("#") == 0) {
+                show_func(idx);
+            }
+            else if (sbuf.compare("#USER") == 0)
+                show_user(idx);
+            else if (buf[0] == '#') {
                 int cur_position = 0;
                 int position = sbuf.find(" ", cur_position);
                 int len = position - cur_position;
@@ -180,10 +235,12 @@ void recv_msg(int idx) {
                     pstmt->execute(); // 쿼리 실행
                     cout << msg << endl;
                     for (int i = 0; i < client_count; i++) {
-                        if (receiver.compare(sck_list[i].user) == 0) {
-                            send(sck_list[i].sck, msg.c_str(), MAX_SIZE, 0);
-                        }
+                        if (receiver.compare(sck_list[i].user) == 0)
+                            send(sck_list[i].sck, msg.c_str(), MAX_SIZE, 0); 
                     }
+                }
+                else if (flag.compare("#CAL") == 0) {
+                    calculator(idx, position, sbuf);
                 }
             }
             else {
@@ -208,5 +265,6 @@ void recv_msg(int idx) {
 
 void del_client(int idx) {
     closesocket(sck_list[idx].sck);
+    sck_list.erase(sck_list.begin() + idx);
     client_count--;
 }
