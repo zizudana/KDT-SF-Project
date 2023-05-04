@@ -1,4 +1,4 @@
-﻿#pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "ws2_32.lib")
 
 #include <WinSock2.h> //Winsock 헤더파일 include. WSADATA 들어있음.ㄴ
 #include <WS2tcpip.h>
@@ -7,8 +7,13 @@
 #include <iostream>
 #include <thread>
 #include <mysql/jdbc.h>
+#include <ctime>
+
+
 
 #define MAX_SIZE 1024
+
+
 
 using std::cout;
 using std::cin;
@@ -56,6 +61,8 @@ int main() {
     sql::PreparedStatement* pstmt;
     sql::ResultSet* result;
 
+
+
     try {
         driver = sql::mysql::get_mysql_driver_instance();
         con = driver->connect(server, username, password);
@@ -97,7 +104,7 @@ int main() {
                 //select  
                 pstmt = con->prepareStatement("SELECT * FROM user;");
                 result = pstmt->executeQuery();
-            
+
                 while (result->next()) {
                     if (user_name == result->getString(1) && user_pw == result->getString(2)) {
                         is_login = true;
@@ -110,7 +117,7 @@ int main() {
                 else {
                     cout << "로그인 실패" << endl;
                 }
-                
+
             }
             else if (user_input == 2) { // 회원가입하기
                 bool id_ok = false;
@@ -202,10 +209,11 @@ int main() {
 
         }
 
+        }
         //cout << "사용할 닉네임 입력 >> ";
         //cin >> my_nick;
 
-        client_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP); 
+        client_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
 
         SOCKADDR_IN client_addr = {};
         client_addr.sin_family = AF_INET;
@@ -222,17 +230,18 @@ int main() {
         }
 
         string msg = "";
-        //select  
-        pstmt = con->prepareStatement("SELECT sender, receiver, message FROM chatting;");
+       //select  
+        pstmt = con->prepareStatement("SELECT sender, receiver, message, time FROM chatting;");
         result = pstmt->executeQuery();
 
         while (result->next()) {
             string receiver = result->getString(2);
             if (receiver.empty() || receiver.compare(user_name) == 0) {
-                msg += result->getString(1) + " : " + result->getString(3) + "\n";
+                msg += result->getString(1) + " : " + result->getString(3) + " [" + result->getString(4) + "]\n";
             }
         }
-        cout << msg;
+        cout << msg << endl;
+        
 
         std::thread th2(chat_recv);
 
@@ -246,6 +255,7 @@ int main() {
         closesocket(client_sock);
     }
    
+
 
     WSACleanup();
     return 0;
