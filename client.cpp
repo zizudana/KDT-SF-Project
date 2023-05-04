@@ -1,4 +1,4 @@
-#pragma comment(lib, "ws2_32.lib")
+﻿#pragma comment(lib, "ws2_32.lib")
 
 #include <WinSock2.h> //Winsock 헤더파일 include. WSADATA 들어있음.ㄴ
 #include <WS2tcpip.h>
@@ -7,13 +7,10 @@
 #include <iostream>
 #include <thread>
 #include <mysql/jdbc.h>
+#include <windows.h>
 #include <ctime>
 
-
-
 #define MAX_SIZE 1024
-
-
 
 using std::cout;
 using std::cin;
@@ -31,6 +28,11 @@ string user_name;
 string user_pw;
 string new_pw;
 char delete_count;
+
+void gotoxy(int x, int y) {
+    COORD pos = { x,y }; //x, y 좌표 설정
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos); //커서 설정
+}
 
 int chat_recv() {
     char buf[MAX_SIZE] = { };
@@ -52,16 +54,15 @@ int chat_recv() {
     }
 }
 
-int main() {
 
+int main() {
+    system("mode con: cols=50 lines=40 | title CodingOnTalk");
     // MySQL Connector/C++ 초기화
     sql::mysql::MySQL_Driver* driver; // 추후 해제하지 않아도 Connector/C++가 자동으로 해제해 줌
     sql::Connection* con;
     sql::Statement* stmt;
     sql::PreparedStatement* pstmt;
     sql::ResultSet* result;
-
-
 
     try {
         driver = sql::mysql::get_mysql_driver_instance();
@@ -90,11 +91,11 @@ int main() {
     if (!code) {
         bool is_login = false;
         while (!is_login) {
-            cout << "----------------------------" << endl;
-            cout << "*      CHATTING PROGRAM    *" << endl;
-            cout << "* 1: 로그인    2: 회원가입 *" << endl;
-            cout << "* 3: 암호변경  4: 회원탈퇴 *" << endl;
-            cout << "----------------------------" << endl;
+            cout << "--------------------------------------------------" << endl;
+            cout << "*                CHATTING PROGRAM                *" << endl;
+            cout << "*           1: 로그인      2: 회원가입           *" << endl;
+            cout << "*           3: 암호변경    4: 회원탈퇴           *" << endl;
+            cout << "--------------------------------------------------" << endl;
             cin >> user_input;
             if (user_input == 1) { // 로그인하기
                 cout << "name : ";
@@ -104,7 +105,7 @@ int main() {
                 //select  
                 pstmt = con->prepareStatement("SELECT * FROM user;");
                 result = pstmt->executeQuery();
-
+            
                 while (result->next()) {
                     if (user_name == result->getString(1) && user_pw == result->getString(2)) {
                         is_login = true;
@@ -117,12 +118,12 @@ int main() {
                 else {
                     cout << "로그인 실패" << endl;
                 }
-
+                
             }
             else if (user_input == 2) { // 회원가입하기
                 bool id_ok = false;
                 while (id_ok == false) {
-                    cout << "===============================" << endl;
+                    cout << "==================================================" << endl;
                     cout << "ID를 입력하세요(10자 이내) : ";
                     cin >> user_name;
                     pstmt = con->prepareStatement("SELECT * FROM user;");
@@ -146,7 +147,7 @@ int main() {
                 pstmt->setString(2, user_pw); // 두 번째 컬럼에 pwd 삽입
                 pstmt->execute(); // 쿼리 실행
                 cout << user_name << "님, ID가 정상적으로 생성되셨습니다." << endl;
-                cout << "===============================" << endl << endl;
+                cout << "==================================================" << endl << endl;
             }
             else if (user_input == 3) { //암호 변경
                 bool id_ok = false;
@@ -199,21 +200,22 @@ int main() {
                     }
                     else if (delete_count == 'N' || delete_count == 'n') {
                         is_login = false;
-                        
+
                     }
                 }
                 else {
                     cout << "정보가 올바르지 못합니다." << endl;
                 }
             }
-
+            else {
+                cout << "1 또는 2를 입력해주세요" << endl;
+            }
         }
 
-        }
         //cout << "사용할 닉네임 입력 >> ";
         //cin >> my_nick;
 
-        client_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+        client_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP); 
 
         SOCKADDR_IN client_addr = {};
         client_addr.sin_family = AF_INET;
@@ -223,6 +225,11 @@ int main() {
         while (1) {
             if (!connect(client_sock, (SOCKADDR*)&client_addr, sizeof(client_addr))) {
                 cout << "Server Connect" << endl;
+                string title = "title CodingOnTalk - " + user_name;
+                Sleep(1000);
+                system("cls");
+                system("color 60");
+                system(title.c_str());
                 send(client_sock, user_name.c_str(), user_name.length(), 0);
                 break;
             }
@@ -230,7 +237,7 @@ int main() {
         }
 
         string msg = "";
-       //select  
+        //select  
         pstmt = con->prepareStatement("SELECT sender, receiver, message, time FROM chatting;");
         result = pstmt->executeQuery();
 
@@ -241,21 +248,26 @@ int main() {
             }
         }
         cout << msg << endl;
-        
 
         std::thread th2(chat_recv);
 
         while (1) {
             string text;
+            gotoxy(0, 30);
             std::getline(cin, text);
+            if (text == "#EXIT") {
+                cout << "종료" << endl;
+                //th2.join();
+                closesocket(client_sock);
+                WSACleanup();
+                exit(0);
+            }
             const char* buffer = text.c_str(); // string형을 char* 타입으로 변환
             send(client_sock, buffer, strlen(buffer), 0);
         }
         th2.join();
         closesocket(client_sock);
     }
-   
-
 
     WSACleanup();
     return 0;
