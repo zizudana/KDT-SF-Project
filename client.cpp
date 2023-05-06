@@ -1,44 +1,114 @@
 ﻿#pragma comment(lib, "ws2_32.lib")
+#include "client.h"
 
-#include <WinSock2.h> //Winsock 헤더파일 include. WSADATA 들어있음.ㄴ
-#include <WS2tcpip.h>
-#include <string>
-#include <sstream>
-#include <iostream>
-#include <thread>
-#include <mysql/jdbc.h>
-#include <windows.h>
-#include <ctime>
-#include <random>
-#include <functional>
+int main() {
+    // 콘솔 채팅방 크기, 이름 설정
+    system("mode con: cols=50 lines=40 | title CodingOnTalk");
 
-#define MAX_SIZE 1024
+    // 데이터 베이스 연결
+    try {
+        driver = sql::mysql::get_mysql_driver_instance();
+        con = driver->connect(server, username, password);
+    }
+    catch (sql::SQLException& e) {
+        cout << "Could not connect to server. Error message: " << e.what() << endl;
+        exit(1);
+    }
 
-using std::cout;
-using std::cin;
-using std::endl;
-using std::string;
+    // 데이터베이스 선택
+    con->setSchema("chattingproject");
 
-const string server = "tcp://127.0.0.1:3306"; // 데이터베이스 주소
-const string username = "root"; // 데이터베이스 사용자
-const string password = "cho337910!@@"; // 데이터베이스 접속 비밀번호
+    // db 한글 저장을 위한 셋팅 
+    stmt = con->createStatement();
+    stmt->execute("set names euckr");
+    if (stmt) { delete stmt; stmt = nullptr; }
 
-SOCKET client_sock;
-//string my_nick;
-int user_input;
-string user_name;
-string user_pw;
-string new_pw;
+    WSADATA wsa;
 
-sql::mysql::MySQL_Driver* driver; // 추후 해제하지 않아도 Connector/C++가 자동으로 해제해 줌
-sql::Connection* con;
-sql::Statement* stmt;
-sql::PreparedStatement* pstmt;
-sql::ResultSet* result;
+    // Winsock를 초기화하는 함수. MAKEWORD(2, 2)는 Winsock의 2.2 버전을 사용하겠다는 의미.
+    // 실행에 성공하면 0을, 실패하면 그 이외의 값을 반환.
+    // 0을 반환했다는 것은 Winsock을 사용할 준비가 되었다는 의미.
+    int code = WSAStartup(MAKEWORD(2, 2), &wsa);
 
-void gotoxy(int x, int y) {
-    COORD pos = { x,y }; //x, y 좌표 설정
-    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos); //커서 설정
+    if (!code) {
+        bool is_login = false;
+        while (!is_login) {
+            cout << "--------------------------------------------------" << endl;
+            cout << "*                CHATTING PROGRAM                *" << endl;
+            cout << "*           1: 로그인      2: 회원가입           *" << endl;
+            cout << "*           3: 암호변경    4: 회원탈퇴           *" << endl;
+            cout << "--------------------------------------------------" << endl;
+            char user_input;
+            cin >> user_input;
+            if (user_input == '1') // 로그인하기
+                is_login = login();
+            else if (user_input == '2') // 회원가입하기
+                join();
+            else if (user_input == '3') //암호 변경
+                change_pw();
+            else if (user_input == '4') // 회원탈퇴
+                delete_user();
+            else {
+                cout << "1 ~4 값을 입력해주세요" << endl;
+                continue;
+            }
+        }
+
+        client_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+
+        SOCKADDR_IN client_addr = {};
+        client_addr.sin_family = AF_INET;
+        client_addr.sin_port = htons(7777);
+        InetPton(AF_INET, TEXT("127.0.0.1"), &client_addr.sin_addr);
+
+        while (1) {
+            if (!connect(client_sock, (SOCKADDR*)&client_addr, sizeof(client_addr))) {
+                cout << "Server Connect" << endl;
+                string title = "title CodingOnTalk - " + user_name;
+                Sleep(1000);
+                system("cls");
+                system("color 60");
+                system(title.c_str());
+                send(client_sock, user_name.c_str(), user_name.length(), 0);
+                break;
+            }
+            cout << "Connecting..." << endl;
+        }
+
+        // 이전 채팅기록 보여주기
+        show_before_chat();
+
+        std::thread th2(chat_recv);
+
+        while (1) {
+            string text;
+            std::getline(cin, text);
+            if (text == "#EXIT") {
+                cout << "종료" << endl;
+                //th2.join();
+                closesocket(client_sock);
+                WSACleanup();
+                exit(0);
+            }
+            else if (text == "#GAME") {
+                game();
+            }
+            const char* buffer = text.c_str(); // string형을 char* 타입으로 변환
+            send(client_sock, buffer, strlen(buffer), 0);
+        }
+
+        th2.join();
+        closesocket(client_sock);
+    }
+
+    WSACleanup();
+    // MySQL Connector/C++ 정리
+    delete con;
+    delete stmt;
+    delete pstmt;
+    delete result;
+
+    return 0;
 }
 
 int chat_recv() {
@@ -86,7 +156,6 @@ bool login() {
 }
 
 bool join() {
-
     bool id_ok = false;
     while (id_ok == false) {
         cout << "==================================================" << endl;
@@ -125,6 +194,7 @@ void change_pw() {
         result = pstmt->executeQuery();
         while (result->next()) {
             if (user_name == result->getString(1).c_str()) {
+                string new_pw;
                 cout << "변경할 암호를 입력하세요(20자 이내) : ";
                 cin >> new_pw;
                 pstmt = con->prepareStatement("UPDATE user SET pw = ? WHERE name = ?");
@@ -177,6 +247,21 @@ void delete_user() {
     }
 }
 
+void show_before_chat() {
+    string msg = "";
+    //select  
+    pstmt = con->prepareStatement("SELECT sender, receiver, message, time FROM chatting;");
+    result = pstmt->executeQuery();
+
+    while (result->next()) {
+        string receiver = result->getString(2);
+        if (receiver.empty() || receiver.compare(user_name) == 0) {
+            msg += result->getString(1) + " : " + result->getString(3) + " [" + result->getString(4) + "]\n";
+        }
+    }
+    cout << msg << endl;
+}
+
 void game() {
     //#GAME
     using std::random_device;
@@ -218,118 +303,4 @@ void game() {
     }   
     cout << chance << "번 내에 숫자를 맞추지 못하였습니다.. 정답 : " << com << endl << endl;
     return;
-}
-
-int main() {
-    system("mode con: cols=50 lines=40 | title CodingOnTalk");
-
-    try {
-        driver = sql::mysql::get_mysql_driver_instance();
-        con = driver->connect(server, username, password);
-    }
-    catch (sql::SQLException& e) {
-        cout << "Could not connect to server. Error message: " << e.what() << endl;
-        exit(1);
-    }
-
-    // 데이터베이스 선택
-    con->setSchema("chattingproject");
-
-    // db 한글 저장을 위한 셋팅 
-    stmt = con->createStatement();
-    stmt->execute("set names euckr");
-    if (stmt) { delete stmt; stmt = nullptr; }
-
-    WSADATA wsa;
-
-    // Winsock를 초기화하는 함수. MAKEWORD(2, 2)는 Winsock의 2.2 버전을 사용하겠다는 의미.
-    // 실행에 성공하면 0을, 실패하면 그 이외의 값을 반환.
-    // 0을 반환했다는 것은 Winsock을 사용할 준비가 되었다는 의미.
-    int code = WSAStartup(MAKEWORD(2, 2), &wsa);
-
-    if (!code) {
-        bool is_login = false;
-        while (!is_login) {
-            cout << "--------------------------------------------------" << endl;
-            cout << "*                CHATTING PROGRAM                *" << endl;
-            cout << "*           1: 로그인      2: 회원가입           *" << endl;
-            cout << "*           3: 암호변경    4: 회원탈퇴           *" << endl;
-            cout << "--------------------------------------------------" << endl;
-            cin >> user_input;
-            if (user_input == 1) // 로그인하기
-                is_login = login();
-            else if (user_input == 2) // 회원가입하기
-                join();
-            else if (user_input == 3) //암호 변경
-                change_pw();
-            else if (user_input == 4) // 회원탈퇴
-                delete_user();
-            else
-                cout << "1 ~4 값을 입력해주세요" << endl;
-        }
-
-        //cout << "사용할 닉네임 입력 >> ";
-        //cin >> my_nick;
-
-        client_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-
-        SOCKADDR_IN client_addr = {};
-        client_addr.sin_family = AF_INET;
-        client_addr.sin_port = htons(7777);
-        InetPton(AF_INET, TEXT("127.0.0.1"), &client_addr.sin_addr);
-
-        while (1) {
-            if (!connect(client_sock, (SOCKADDR*)&client_addr, sizeof(client_addr))) {
-                cout << "Server Connect" << endl;
-                string title = "title CodingOnTalk - " + user_name;
-                Sleep(1000);
-                system("cls");
-                system("color 60");
-                system(title.c_str());
-                send(client_sock, user_name.c_str(), user_name.length(), 0);
-                break;
-            }
-            cout << "Connecting..." << endl;
-        }
-
-        string msg = "";
-        //select  
-        pstmt = con->prepareStatement("SELECT sender, receiver, message, time FROM chatting;");
-        result = pstmt->executeQuery();
-
-        while (result->next()) {
-            string receiver = result->getString(2);
-            if (receiver.empty() || receiver.compare(user_name) == 0) {
-                msg += result->getString(1) + " : " + result->getString(3) + " [" + result->getString(4) + "]\n";
-            }
-        }
-        cout << msg << endl;
-
-        std::thread th2(chat_recv);
-
-        while (1) {
-            string text;
-            //gotoxy(0, 30);
-            std::getline(cin, text);
-            if (text == "#EXIT") {
-                cout << "종료" << endl;
-                //th2.join();
-                closesocket(client_sock);
-                WSACleanup();
-                exit(0);
-            }
-            else if (text == "#GAME") {
-                game();
-            }
-            const char* buffer = text.c_str(); // string형을 char* 타입으로 변환
-            send(client_sock, buffer, strlen(buffer), 0);
-        }
-
-
-        th2.join();
-        closesocket(client_sock);
-    }
-
-    WSACleanup();
-    return 0;
 }
