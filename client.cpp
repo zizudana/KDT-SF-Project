@@ -9,6 +9,8 @@
 #include <mysql/jdbc.h>
 #include <windows.h>
 #include <ctime>
+#include <random>
+#include <functional>
 
 #define MAX_SIZE 1024
 
@@ -175,6 +177,49 @@ void delete_user() {
     }
 }
 
+void game() {
+    //#GAME
+    using std::random_device;
+    using std::default_random_engine;
+    using std::uniform_int_distribution;
+
+    int min = 0;
+    int max = 50;
+    int chance = 5;
+    int com = 0;
+    int count = 0;
+    int num;
+    random_device rd;
+    default_random_engine re(rd());
+    uniform_int_distribution<int> dist(min, max);
+    auto rand = bind(dist, re);
+    count = 0;
+    com = rand();
+
+    cout << "************* UP & DOWN GAME *************" << endl;
+    cout << "숫자의 범위 (" << min << "~" << max << ")" << endl;
+    cout << "총 " << chance << "번의 기회가 있습니다." << endl;
+    while (count <  chance) {
+        cout << "숫자를 입력해주세요 : ";
+        cin >> num;
+        if (num < min || num > max) {
+            cout << "범위 내의 숫자를 입력해주세요." << endl;
+        }
+        else {
+            count++;
+            if (num == com) {
+                cout << count << "번 시도 끝에 맞추셨습니다! *게임종료*" << endl;
+                return;
+            }
+            else
+                cout << count << "번 시도 : " << (num > com ? "DOWN" : "UP") << endl;
+
+        }
+    }   
+    cout << chance << "번 내에 숫자를 맞추지 못하였습니다.. 정답 : " << com << endl << endl;
+    return;
+}
+
 int main() {
     system("mode con: cols=50 lines=40 | title CodingOnTalk");
 
@@ -273,9 +318,14 @@ int main() {
                 WSACleanup();
                 exit(0);
             }
+            else if (text == "#GAME") {
+                game();
+            }
             const char* buffer = text.c_str(); // string형을 char* 타입으로 변환
             send(client_sock, buffer, strlen(buffer), 0);
         }
+
+
         th2.join();
         closesocket(client_sock);
     }

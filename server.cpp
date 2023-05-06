@@ -6,6 +6,8 @@
 #include <sstream>
 #include <thread>
 #include <vector>
+#include <random>
+#include <functional>
 #include <mysql/jdbc.h>
 
 #define MAX_SIZE 1024
@@ -15,6 +17,9 @@ using std::cout;
 using std::cin;
 using std::endl;
 using std::string;
+using std::random_device;
+using std::default_random_engine;
+using std::uniform_int_distribution;
 
 const string server = "tcp://127.0.0.1:3306"; // 데이터베이스 주소
 const string username = "root"; // 데이터베이스 사용자
@@ -144,9 +149,11 @@ void show_func(int idx) {
     "* # :FUNC LIST                          *\n" 
     "* #USER :현재 접속중인 사용자 아이디    *\n"
     "* #DM receiver message :DM 보내기       *\n" 
-    "* #CAL number operator number :사칙연산 *\n" 
+    "* #CAL number operator number :사칙연산 *\n"
+    "* #GAME : UP & DOWN 게임                *\n"
     "-----------------------------------------\n";
     send(sck_list[idx].sck, msg.c_str(), MAX_SIZE, 0);
+    cout << msg << endl;
 }
 
 void calculator(int idx, int position, string sbuf) {
