@@ -250,7 +250,7 @@ void delete_user() {
 void show_before_chat() {
     string msg = "";
     //select  
-    pstmt = con->prepareStatement("SELECT sender, receiver, message, time FROM chatting;");
+    pstmt = con->prepareStatement("SELECT sender, receiver, message, time from chatting limit 10");
     result = pstmt->executeQuery();
 
     while (result->next()) {
@@ -281,7 +281,7 @@ void game() {
     count = 0;
     com = rand();
 
-    cout << "************* UP & DOWN GAME *************" << endl;
+    cout << "***************** UP & DOWN GAME *****************" << endl;
     cout << "숫자의 범위 (" << min << "~" << max << ")" << endl;
     cout << "총 " << chance << "번의 기회가 있습니다." << endl;
     while (count <  chance) {

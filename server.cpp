@@ -115,6 +115,7 @@ void show_func(int idx) {
     "* #DM receiver message : DM 보내기               *\n" 
     "* #CAL number operator number : 사칙연산         *\n"
     "* #GAME : UP & DOWN 게임                         *\n"
+    "* #EXIT : 프로그램 종료                          *\n"
     "--------------------------------------------------\n";
     send(sck_list[idx].sck, msg.c_str(), MAX_SIZE, 0);
     cout << msg << endl;
@@ -132,7 +133,7 @@ void calculator(int idx, int position, string sbuf) {
     cur_position = position + 1;
     string num2 = sbuf.substr(cur_position);
     
-    double result;
+    double result = 0;
     if (op == "+")
         result = std::stoi(num1) + std::stoi(num2);
     else if (op == "-")
@@ -161,7 +162,7 @@ void send_dm(int position, string sbuf, int idx) {
     pstmt->setString(2, receiver);
     pstmt->setString(3, dm);
     pstmt->execute(); // 쿼리 실행
-    pstmt = con->prepareStatement("SELECT time FROM chatting ORDER BY time DESC LIMIT 1");
+    pstmt = con->prepareStatement("SELECT date_format(time, '%H:%m') FROM chatting ORDER BY time DESC LIMIT 1");
     result = pstmt->executeQuery();
 
     while (result->next()) {
@@ -219,7 +220,7 @@ void recv_msg(int idx) {
                 pstmt->setString(1, sck_list[idx].user);
                 pstmt->setString(2, buf);
                 pstmt->execute(); // 쿼리 실행
-                pstmt = con->prepareStatement("SELECT time FROM chatting ORDER BY time DESC LIMIT 1");
+                pstmt = con->prepareStatement("SELECT date_format(time, '%H:%m') FROM chatting ORDER BY time DESC LIMIT 1");
                 result = pstmt->executeQuery();
 
                 while (result->next()) {
