@@ -111,6 +111,12 @@ int main() {
     return 0;
 }
 
+void textcolor(int foreground, int background)
+{
+    int color = foreground + background * 16;
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
+}
+
 int chat_recv() {
     char buf[MAX_SIZE] = { };
     string msg;
@@ -122,7 +128,20 @@ int chat_recv() {
             std::stringstream ss(msg);  // 문자열을 스트림화
             string user;
             ss >> user; // 스트림을 통해, 문자열을 공백 분리해 변수에 할당
-            if (user != user_name) cout << buf << endl; // 내가 보낸 게 아닐 경우에만 출력하도록.
+            if (user == "server" || user == "[공지]") {
+                textcolor(4,6); // 서버에서 온 메세지는 빨간색으로 출력
+                cout << buf << endl;
+            }
+            else if (user == "[DM]") {
+                textcolor(1,6); // DM은 파란색으로 출력
+                cout << buf << endl;
+            }
+            else {
+                textcolor(0, 6);
+                if (user != user_name)
+                    cout << buf << endl; // 내가 보낸 게 아닐 경우에만 출력하도록.
+            }
+            textcolor(0, 6);
         }
         else {
             cout << "Server Off" << endl;
