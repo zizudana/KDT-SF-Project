@@ -31,6 +31,7 @@ SOCKET client_sock;
 string user_name;
 string user_pw;
 
+void textcolor(int foreground, int background);
 int chat_recv();
 bool login(); 
 bool join();
