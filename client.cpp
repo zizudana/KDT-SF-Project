@@ -232,10 +232,13 @@ void change_pw() {
         cout << "--------------------------------------------------" << endl;
         cout << "ID를 입력하세요(10자 이내) : ";
         cin >> user_name;
+        cout << "--------------------------------------------------" << endl;
+        cout << "암호를 입력하세요(20자 이내) : ";
+        cin >> user_pw;
         pstmt = con->prepareStatement("SELECT * FROM user;");
         result = pstmt->executeQuery();
         while (result->next()) {
-            if (user_name == result->getString(1).c_str()) {
+            if (user_name == result->getString(1) && user_pw == result->getString(2)) {
                 string new_pw;
                 while (new_pw_ok == false) {
                     cout << "--------------------------------------------------" << endl;
@@ -261,7 +264,7 @@ void change_pw() {
             }
         }
         if (id_ok == false) {
-            cout << "올바른 ID가 아닙니다.(10자이내) : " << endl << endl;
+            cout << "올바른 회원정보가 아닙니다. " << endl << endl;
         }
     }
 }
