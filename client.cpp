@@ -49,7 +49,7 @@ int main() {
             else if (user_input == '4') // 회원탈퇴
                 delete_user();
             else {
-                cout << "1 ~4 값을 입력해주세요" << endl;
+                cout << "1 ~4 값을 입력해주세요" << endl << endl;
                 continue;
             }
         }
@@ -166,26 +166,37 @@ bool login() {
         }
     }
     if (is_login) {
-        cout << "로그인 성공! 채팅방에 입장합니다" << endl;
+        cout << "로그인 성공! 채팅방에 입장합니다" << endl << endl;
     }
     else {
-        cout << "로그인 실패" << endl;
+        cout << "로그인 실패" << endl << endl;
     }
     return is_login;
 }
 
 bool join() {
     bool id_ok = false;
-    while (id_ok == false) {
-        cout << "==================================================" << endl;
+    bool is_join = false;
+    bool pw_ok = false;
+    while (id_ok == false) {        
+        cout << "--------------------------------------------------" << endl;
         cout << "ID를 입력하세요(10자 이내) : ";
-        cin >> user_name;
+        cin >> user_name;        
+            if (user_name.length() > 10) {
+                cout << "10자 이내로 입력해주세요." << endl << endl;
+                is_join = true;               
+            }
+            else {
+                is_join == false;
+                break;
+            }
+        
         pstmt = con->prepareStatement("SELECT * FROM user;");
         result = pstmt->executeQuery();
-        bool is_join = false;
+        //bool is_join = false;
         while (result->next()) {
             if (user_name == result->getString(1).c_str()) {
-                cout << "이미 존재하는 ID입니다." << endl;
+                cout << "이미 존재하는 ID입니다." << endl << endl;
                 is_join = true;
                 break;
             }
@@ -193,20 +204,32 @@ bool join() {
         if (is_join == false)
             id_ok = true;
     }
-    cout << "password를 입력하세요(20자 이내) : ";
-    cin >> user_pw;
+    while (pw_ok == false) {
+        cout << "--------------------------------------------------" << endl;
+        cout << "password를 입력하세요(20자 이내) : ";
+        cin >> user_pw;
+        if (user_pw.length() > 20) {
+            cout << "20자 이내로 입력해주세요." << endl << endl;
+        }
+        else {
+            pw_ok = true;
+            break;
+        }
+    }  
     pstmt = con->prepareStatement("INSERT INTO user(name, pw) VALUES(?,?)"); // INSERT
 
     pstmt->setString(1, user_name); // 첫 번째 컬럼에 id 삽입
     pstmt->setString(2, user_pw); // 두 번째 컬럼에 pwd 삽입
     pstmt->execute(); // 쿼리 실행
     cout << user_name << "님, ID가 정상적으로 생성되셨습니다." << endl;
-    cout << "==================================================" << endl << endl;
+    cout << "--------------------------------------------------" << endl << endl;
 }
 
 void change_pw() {
     bool id_ok = false;
+    bool new_pw_ok = false;
     while (id_ok == false) {
+        cout << "--------------------------------------------------" << endl;
         cout << "ID를 입력하세요(10자 이내) : ";
         cin >> user_name;
         pstmt = con->prepareStatement("SELECT * FROM user;");
@@ -214,26 +237,40 @@ void change_pw() {
         while (result->next()) {
             if (user_name == result->getString(1).c_str()) {
                 string new_pw;
-                cout << "변경할 암호를 입력하세요(20자 이내) : ";
-                cin >> new_pw;
+                while (new_pw_ok == false) {
+                    cout << "--------------------------------------------------" << endl;
+                    cout << "변경할 암호를 입력하세요(20자 이내) : ";
+                    cin >> new_pw;
+                    if (new_pw.length() > 20) {
+                        cout << "20자 이내로 입력해주세요." << endl << endl;                        
+                    }
+                    else {
+                        new_pw_ok = true;
+                        break;
+                    }
+                }
                 pstmt = con->prepareStatement("UPDATE user SET pw = ? WHERE name = ?");
                 pstmt->setString(1, new_pw);
                 pstmt->setString(2, user_name);
                 pstmt->executeQuery();
+                cout << "--------------------------------------------------" << endl;
                 printf("암호가 정상적으로 변경되었습니다.\n");
+                cout << endl;
                 id_ok = true;
                 break;
             }
         }
         if (id_ok == false) {
-            cout << "올바른 ID가 아닙니다.(20자이내) : " << endl;
+            cout << "올바른 ID가 아닙니다.(10자이내) : " << endl << endl;
         }
     }
 }
 
 void delete_user() {
+    cout << "--------------------------------------------------" << endl;
     cout << "ID를 입력하세요 : ";
     cin >> user_name;
+    cout << "--------------------------------------------------" << endl;
     cout << "password를 입력하세요 : ";
     cin >> user_pw;
     //select  
@@ -248,12 +285,14 @@ void delete_user() {
     }
     char delete_count;
     if (is_login) {
+        cout << "--------------------------------------------------" << endl;
         cout << "정말 탈퇴하시겠습니까? (Y / N)";
         cin >> delete_count;
         if (delete_count == 'Y' || delete_count == 'y') {
             pstmt = con->prepareStatement("DELETE FROM user WHERE name = ?");
             pstmt->setString(1, user_name);
             result = pstmt->executeQuery();
+            cout << "--------------------------------------------------" << endl;
             printf("정상적으로 탈퇴되셨습니다.\n");
             is_login = false;
         }
