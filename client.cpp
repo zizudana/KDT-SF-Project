@@ -1,5 +1,6 @@
 ﻿#pragma comment(lib, "ws2_32.lib")
 #include "client.h"
+#include <conio.h>
 
 int main() {
     // 콘솔 채팅방 크기, 이름 설정
@@ -151,10 +152,31 @@ int chat_recv() {
 }
 
 bool login() {
+    char* pw = new char[20];
     cout << "name : ";
     cin >> user_name;
     cout << "password : ";
-    cin >> user_pw;
+    //cin >> user_pw;
+    int i = 0;
+    while ((pw[i] = _getch()) != 13)
+    {
+        if (pw[i] == 8)
+        {
+            printf("\b");
+            cout << ' ';
+            printf("\b");
+            if (i > 0)
+                i--;
+        }
+        else
+        {
+            cout << '*';
+            i++;
+        }
+    }
+    pw[i] = '\0';
+    user_pw = pw;
+
     //select  
     pstmt = con->prepareStatement("SELECT * FROM user;");
     result = pstmt->executeQuery();
@@ -166,10 +188,10 @@ bool login() {
         }
     }
     if (is_login) {
-        cout << "로그인 성공! 채팅방에 입장합니다" << endl << endl;
+        cout << "\n로그인 성공! 채팅방에 입장합니다" << endl << endl;
     }
     else {
-        cout << "로그인 실패" << endl << endl;
+        cout << "\n로그인 실패" << endl << endl;
     }
     return is_login;
 }
